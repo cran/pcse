@@ -196,6 +196,14 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
  if (flag == FALSE){
    if (pairwise == FALSE){
 
+     if (BN == 0 | BT == 0){
+       stop("Either the number of CS observations per panel ",
+                   "or the number of TS observations per panel ",
+                   "used to compute the vcov matrix is zero. You must use",
+                   " pairwise selection.")
+     }
+
+
      e <- balanced$resid
      E <- matrix(NA, BN, BT)
      
@@ -207,7 +215,7 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
      Sigma.hat <- crossprod(E) / BT
 
      if (avgN/2 > BT){
-       print(paste("Caution! The number of CS observations per panel,", BT,
+       print(paste("Caution! The number of CS observations per panel, ", BT,
                    ", used to compute the vcov matrix is less than half the",
                    "average number of obs per panel in the original data.",
                    "You should consider using pairwise selection."))
@@ -260,6 +268,13 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
    
      numer <- crossprod(E)
      denom <- crossprod(V)
+     for (i in 1:dim(denom)[1]){
+       for (j in 1:dim(denom)[2]){
+         if (denom[i, j] == 0){
+           denom[i, j] = NA
+         }
+       }
+     }
      check <- is.na(denom)
      if (sum(check) != 0){
        stop("Error! A CS-unit exists without any obs or without any obs in
