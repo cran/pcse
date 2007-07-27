@@ -10,8 +10,8 @@ This package contains a function to estimate panel-corrected standard errors. Da
 \tabular{ll}{
 Package: \tab pcse\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2007-02-09\cr
+Version: \tab 1.3\cr
+Date: \tab 2007-07-27\cr
 License: \tab \cr
 }
 }
@@ -37,8 +37,8 @@ Beck, Nathaniel and Jonathan N. Katz. (1995) What to do (and not to do) with Tim
 }
 
 \author{
-Delia Bailey <delia@caltech.edu> and Jonathan N. Katz <jkatz@caltech.edu>
-Maintainer: Delia Bailey <delia@caltech.edu>
+Delia Bailey <dbailey@wustl.edu> and Jonathan N. Katz <jkatz@caltech.edu>
+Maintainer: Delia Bailey <dbailey@wustl.edu>
 }
 
 \keyword{ package }
