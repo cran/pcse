@@ -92,7 +92,7 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
 
   # Check that time-series and cross-section identifier variables
   # are the same length as the using data.
-  check <- length(groupN) == dim(eval(object$call$data))[1]
+  check <- length(groupN) == dim(model.matrix(object))[1]
   if (check == FALSE){
     stop("Length of groupN and groupT must equal nrows of using data.")
   }
@@ -115,7 +115,7 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
   # Check that there are not more than nCS*nTS rows in the data.
   nCS     <- length(na.omit(unique(groupN))) # number of cross-sectional units
   nTS     <- length(na.omit(unique(groupT))) # number of time-series units
-  check <- nCS*nTS >= dim(eval(object$call$data))[1]
+  check <- nCS*nTS >= dim(model.matrix(object))[1]
   if (check == FALSE){
     stop("There cannot be more than nCS*nTS rows in the using data!")
   }
