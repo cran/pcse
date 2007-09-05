@@ -19,8 +19,8 @@ The package pcse contains a function to estimate panel-corrected standard errors
 }
 
 \author{
-Delia Bailey <dbailey@wustl.edu> and Jonathan N. Katz <jkatz@caltech.edu>
-Maintainer: Delia Bailey <dbailey@wustl.edu>
+Delia Bailey <delia.bailey@gmail.com> and Jonathan N. Katz <jkatz@caltech.edu>
+Maintainer: Delia Bailey <delia.bailey@gmail.com>
 }
 
 \keyword{file}

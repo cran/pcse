@@ -37,8 +37,8 @@ Beck, Nathaniel and Jonathan N. Katz. (1995) What to do (and not to do) with Tim
 }
 
 \author{
-Delia Bailey <dbailey@wustl.edu> and Jonathan N. Katz <jkatz@caltech.edu>
-Maintainer: Delia Bailey <dbailey@wustl.edu>
+Delia Bailey <delia.bailey@gmail.com> and Jonathan N. Katz <jkatz@caltech.edu>
+Maintainer: Delia Bailey <delia.bailey@gmail.com>
 }
 
 \keyword{ package }

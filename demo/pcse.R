@@ -43,3 +43,11 @@ aglUn.pcse2 <- pcse(aglUn.lm, groupN=aglUn$country, groupT=aglUn$year,
 summary(aglUn.pcse2)
 
 
+# Extract Panel-Corrected Variance Covariance Matrix and provide to coeftest().
+cv <- vcovPC(aglUn.lm, groupN=aglUn$country, groupT=aglUn$year)
+# both calls below provide the same results.
+coeftest(aglUn.lm, vcov.=cv)
+coeftest(aglUn.lm, vcov.=vcovPC(aglUn.lm, aglUn$country, aglUn$year))
+
+
+

@@ -1,5 +1,4 @@
 #
-# delia@caltech.edu
 # pcse.R
 # function to estimate panel-corrected standard errors
 #
@@ -59,7 +58,7 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
 
   # Check the formula object is 'lm.'
   check <- class(object)
-  if ("lm" %in% check == FALSE){
+  if (!("lm" %in% check)){
     stop("Formula object must be of class 'lm'.")
   }
 
@@ -86,28 +85,28 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
   # Check that the time-series and cross-section identifier variables
   # are the same length.
   check <- length(groupN) == length(groupT)
-  if (check == FALSE){
+  if (!check){
     stop("Length of groupT and groupN be of equal length.")
   }
 
   # Check that time-series and cross-section identifier variables
   # are the same length as the using data.
   check <- length(groupN) == dim(model.matrix(object))[1]
-  if (check == FALSE){
+  if (!check){
     stop("Length of groupN and groupT must equal nrows of using data.")
   }
 
   # Check that there are not any missing values in the cross-section
   # identifier variable.
   check <- is.na(groupN)
-  if (any(check == TRUE)){
+  if (any(check)){
     stop("There must not be any missing values in the CS groupN!")
   }
 
   # Check that there are not any missing values in the time-series
   # identifier variable.
   check <- is.na(groupT)
-  if (any(check == TRUE)){
+  if (any(check)){
     stop("There must not be any missing values in the TS groupT!")
   }
 
@@ -116,7 +115,7 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
   nCS     <- length(na.omit(unique(groupN))) # number of cross-sectional units
   nTS     <- length(na.omit(unique(groupT))) # number of time-series units
   check <- nCS*nTS >= dim(model.matrix(object))[1]
-  if (check == FALSE){
+  if (!check){
     stop("There cannot be more than nCS*nTS rows in the using data!")
   }
 
@@ -180,7 +179,7 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
     # If so, keep those rows. If not, pass. 
     br    <- which(using$groupT == time[i])
     check <- length(br) == nCS
-    if (check == TRUE){
+    if (check){
       brows <- c(brows, br)
     }
   }
@@ -271,7 +270,7 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
   # ESTIMATION
 
   # IF Balanced data, then:
-  if (flag == TRUE){
+  if (flag){
     # estimate Sigma.hat using whole data and get middle matrix (X' omega X).
 
     e <- using$resid            # residuals
@@ -296,9 +295,9 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
   # END flag == TRUE
 
   # If data is not balanced:
-  if (flag == FALSE){
+  if (!flag){
     # IF using casewise selection:
-    if (pairwise == FALSE){
+    if (!pairwise){
       # If taking the balanced subset throws out all the data, quit.
       if (BnCS == 0 | BnTS == 0){
         stop("Either the number of CS observations per panel ",
@@ -323,10 +322,10 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
       # pcses is less than half the avg number of obs in the original data,
       # suggest that the user use pairwise selection.
       if (avgN/2 > BnTS){
-        print(paste("Caution! The number of CS observations per panel, ", BnTS,
+        warning("Caution! The number of CS observations per panel, ", BnTS,
                     ", used to compute the vcov matrix is less than half the",
                     "average number of obs per panel in the original data.",
-                    "You should consider using pairwise selection."))
+                    "You should consider using pairwise selection.")
       }
 
       # X = rectangular data without first 3 cols (CS Id, TS Id, residuals)
@@ -343,7 +342,7 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
     # END Pairwise == FALSE
 
     # IF using pairwise selection:
-    if (pairwise == TRUE){
+    if (pairwise){
       # The next section of code follows gauss procedure from Franzeze (1996).
 
       # Get vector of 1/0 for valid row of obs or not.

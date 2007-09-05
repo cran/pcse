@@ -1,5 +1,4 @@
 # 
-# delia@caltech.edu
 # default summary method for class "pcse"
 # 
 
