@@ -21,8 +21,6 @@ Cross-National panel data on the OECD countries containing information about eco
     \item{\code{inter}}{interaction between leftc and central}
   }
 }
-\details{
-}
 \source{
 Alvarez, R. Michael, Geoffrey Garrett and Peter Lange. (1991) Government Partisanship, Labor Organization, and Macroeconomic Performance. \emph{American Political Science Review} 85:539-56.}
 \references{

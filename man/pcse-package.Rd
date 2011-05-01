@@ -34,6 +34,7 @@ Beck, Nathaniel, Jonathan N. Katz, R. Michael Alvarez, Geoffrey Garrett and Pete
 
 Beck, Nathaniel and Jonathan N. Katz. (1995) What to do (and not to do) with Time-Series Cross-Section Data. \emph{American Political Science Review} 89:634-647.
 
+Bailey, Delia and Jonathan N. Katz. (2011) Implementing Panel-Corrected Standard Errors in R: The pcse Package. \emph{Journal of Statistical Software, Code Snippets} 42(1):1--11. \url{http://www.jstatsoft.org/v42/c01/}
 }
 
 \author{

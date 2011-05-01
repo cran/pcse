@@ -1,0 +1,418 @@
+\documentclass[article,nojss]{jss}
+\usepackage{amsmath,thumbpdf}
+
+%% need no \usepackage{Sweave}
+\SweaveOpts{engine = R, eps = FALSE, keep.source = TRUE}
+<<preliminaries,echo=FALSE,results=hide>>=
+options(prompt = "R> ", continue = "+  ", width = 70, digits = 3, useFancyQuotes = FALSE)
+library("pcse")
+@
+%\VignetteIndexEntry{Implementing Panel-Corrected Standard Errors in R: The pcse Package}
+%\VignetteDepends{pcse}
+%\VignetteKeywords{pcse, time-series--cross-section, covariance matrix estimation, contemporaneous correlation, heteroskedasity, R}
+%\VignettePackage{pcse}
+
+
+\author{Delia Bailey\\YouGov Polimetrix
+   \And Jonathan N. Katz\\California Institute of Technology
+}
+\Plainauthor{Delia Bailey, Jonathan N. Katz}
+
+\title{Implementing Panel-Corrected Standard Errors in~\proglang{R}: The \pkg{pcse} Package}
+\Plaintitle{Implementing Panel-Corrected Standard Errors in R: The pcse Package}
+\Shorttitle{\pkg{pcse}: Panel-Corrected Standard Errors in \proglang{R}}
+
+\Abstract{
+ This introduction to the \proglang{R} package \pkg{pcse} is a (slightly)
+ modified version of \cite{Bailey+Katz:2011}, published in the
+ \emph{Journal of Statistical Software}.
+
+ Time-series--cross-section (TSCS) data are characterized by
+ having repeated observations over time on some set of units, such as
+ states or nations.  TSCS data typically display both contemporaneous
+ correlation across units and unit level heteroskedasity making
+ inference from standard errors produced by ordinary least squares
+ incorrect.  Panel-corrected standard errors (PCSE) account for these
+ these deviations from spherical errors and allow for better
+ inference from linear models estimated from TSCS data. In this
+ paper, we discuss an implementation of them in the \proglang{R}
+ system for statistical computing. The key computational issue is how
+ to handle unbalanced data.
+}
+
+
+\Keywords{\pkg{pcse}, time-series--cross-section, covariance matrix estimation, contemporaneous correlation, heteroskedasity, \proglang{R}}
+\Plainkeywords{pcse, time-series--cross-section, covariance matrix estimation, contemporaneous correlation, heteroskedasity, R}
+
+\Address{
+  Jonathan N. Katz\\
+  California Institute of Technology\\
+  DHSS 228-77\\  
+  Pasadena, CA 91125, United States of America\\
+  E-mail: \email{jkatz@caltech.edu}\\
+  URL: \url{http://jkatz.caltech.edu/}\\
+}
+
+\newcommand{\sh}{\ensuremath{\hat{\sigma}}}
+\newcommand{\bh}{\ensuremath{\hat{\beta}}}
+\newcommand{\bt}{\ensuremath{\tilde{\beta}}}
+\newcommand{\bX}{\ensuremath{\mathbf{X}}}
+\newcommand{\bY}{\ensuremath{\mathbf{Y}}}
+\newcommand{\bx}{\ensuremath{\mathbf{x}}}
+\newcommand{\by}{\ensuremath{\mathbf{y}}}
+\newcommand{\bO}{\ensuremath{\boldsymbol{\Omega}}}
+\newcommand{\bOh}{\ensuremath{\hat{\boldsymbol{\Omega}}}}
+\newcommand{\bS}{\ensuremath{\boldsymbol{\Sigma}}}
+\newcommand{\bSh}{\ensuremath{\hat{\boldsymbol{\Sigma}}}}
+\newcommand{\ea}{et al.}
+\newcommand{\eg}{e.g.,}
+
+
+\begin{document}
+
+\section{Introduction}
+
+Time-series--cross-section (TSCS) data are characterized by having
+repeated observations over time on some set of units, such as states
+or nations. TSCS data have become common in applied studies in the
+social sciences, particularly in comparative political science
+applications. These data often show non-spherical errors because of
+contemporaneous correlation across the  units and unit level
+heteroskedasity. When fitting linear models to TSCS data, it is common
+to use this non-spherical error structure to improve inference and
+estimation efficiency by a feasible generalized least squares (FGLS)
+estimator suggested by \citet{parks:1967} and made popular by
+\citet{kmenta:1986}.
+
+However, \citet{beck+katz:1995} showed that the \citet{parks:1967}
+model had poor finite sample properties. In particular, in a
+simulation study they showed that the estimated standard errors for
+this model generated confidence intervals that were significantly too
+small, often underestimating variability by 50\% or more, and with
+only minimal gains in efficiency over a simple linear model that
+ignored the non-spherical errors. Therefore, \citet{beck+katz:1995}
+suggested estimating linear models of TSCS data by ordinary least
+squares (OLS)\footnote{OLS is implemented in \proglang{R}'s function
+  \code{lm()}.} and they proposed a sandwich type estimator of the
+covariance matrix of the estimated parameters, which they called
+panel-corrected standard errors (PCSE), that is robust to the
+possibility of non-spherical errors.\footnote{The estimator is
+  actually rather poorly named as it really used for TSCS data, in
+  which the time dimension is large enough for serious averaging
+  within units, as opposed to panel data, which typically have short
+  time dimensions. However, this is the nomenclature used in the
+  literature.}
+
+Although the PCSE covariance estimator bears some resemblance to
+heteroskedasity consistent (HC) estimators \citep[see, for
+example,][]{huber:1967, white:1980, mackinnon+white:1985}, these other
+estimators do not explicitly incorporate the known TSCS structure of
+the data.\footnote{ These heteroskedastic constituent covariance
+  estimators are available in the \proglang{R} in the \pkg{sandwich}
+  package \citep{zeileis:2004}} This leads to important differences in
+implementation. 
+
+This paper describes an implementation of PCSEs in the \proglang{R}
+system for statistical computing \citep{R}.  All of the functions
+described here are available in the package \pkg{pcse} that is
+available from Comprehensive \proglang{R} Archive Network (CRAN) at
+\url{http://CRAN.R-project.org/package=pcse}. The key computational
+issue is how to handle unbalanced data. TSCS data is unbalanced when
+the number of observations for units vary.
+
+\proglang{R} packages that estimate various models for panel data include
+\pkg{plm} \citep{plm} and \pkg{systemfit}
+\citep{systemfit}, that also implement different types of robust standard errors.
+Some of these are only robust to unit
+heteroskedasity and possible serial correlation.  The \pkg{pcse}
+standard error estimate is robust not only to unit heteroskedacity,
+but it also robust against possible contemporaneous correlation across
+the units that is common in TSCS data.\footnote{For a discussion of
+the differences between TSCS and panel data see \citet{beck+katz:2011}.}
+Package \pkg{plm} also provides an implementation of \citet{beck+katz:1995}
+PCSE in the function \code{vcovBK()}\footnote{The function \code{vcovBK()}
+was not yet part of \pkg{plm} when the first version of \pkg{pcse}
+was developed.} that can be applied to panel models estimated by \code{plm()}.
+
+The next section fixes notation by briefly reviewing the linear
+TSCE model and the derivation of PCSEs. Section~\ref{sec:computation}
+considers the computational issues with unbalanced
+panels. Section~\ref{sec:example} illustrates the use of the package
+\pkg{pcse}. Finally, Section~\ref{sec:summary} concludes.
+
+
+\section{TSCS data and estimation}
+\label{sec:setup}
+
+The critical assumption of TSCS models is that of ``pooling,'' that
+is, all units are characterized by the same regression equation at all
+points in time.  Given this assumption we can write the generic TSCS
+model as:
+\begin{equation}
+  \label{eq:basic}
+  y_{i,t} = \mathbf{x}_{i,t}\beta + \epsilon_{i,t}
+  ;\quad i=1,\ldots,N;\quad t=1,\ldots,T   
+\end{equation}
+where $\mathbf{x}_{i,t}$ is a vector of one or more ($k$) exogenous
+variables and observations are indexed by both unit ($i$) and time
+($t$).
+
+TSCS analysts typically put some structure on the assumed error
+process. In particular, they usually assume that for any given unit,
+the error variance is constant, so that the only source of
+heteroskedasticity is differing error variances across units. Analysts
+also assume that all spatial correlation is both contemporary and does
+not vary with time. The temporal dependence exhibited by the errors is
+also assumed to be time invariant, and may also be invariant across
+units. We, however, will be ignoring temporal dependence for the
+remainder of this paper by assuming that the analyst has controlled
+for it either by including the lagged dependent variable, $y_{i,t-1}$,
+in the set of regressors, $\mathbf{x}_{i,t}$, or using some sort of
+differencing.  Since these assumptions are all based on the panel
+nature of the data, we call them the ``panel error assumptions.''
+
+As is well known, the correct formula for the sampling variability of
+the OLS estimates from Equation~\ref{eq:basic} is given by the square
+roots of the diagonal terms of
+\begin{equation}
+  \label{eq:genvcv}
+  \mbox{Cov}(\bh) = (\bX^\top\bX)^{-1}\{\bX^\top\bO\bX\}(\bX^\top\bX)^{-1}.
+\end{equation}
+\emph{If} the errors obey the spherical error assumption --- i.e., $\bO =
+\sigma^2 \mathbf{I}$, where $\mathbf{I}$ is an $NT \times NT$ identity
+matrix --- this simplifies to the usual OLS formula, where the OLS
+standard\ errors are the square roots of the diagonal terms of
+\begin{equation*}
+   \widehat{\sigma^2} (\bX^\top\bX)^{-1}
+\end{equation*} 
+where $\widehat{\sigma^2}$ is the usual OLS estimator of the common
+error variance, $\sigma^2$. If the errors obey the panel structure,
+then this provides incorrect standard errors.
+Equation~\ref{eq:genvcv}, however, can still be used, in combination
+with that panel structure of the errors to provide accurate PCSEs.  For panel models with
+contemporaneously correlated and panel heteroskedastic errors, \bO\ is
+an $NT\times NT$ block diagonal matrix with an $N\times N$ matrix of
+contemporaneous covariances, $\bS$, along the diagonal.  To estimate
+Equation \ref{eq:genvcv} we need an estimate of \bS. Since the OLS
+estimates of Equation~\ref{eq:basic} are consistent, we can use the
+OLS residuals from that estimation to provide a consistent estimate of
+\bS. Let $e_{i,t}$ be the OLS residual for unit $i$ at time $t$. We
+can estimate a typical element of $\bS$ by
+\begin{equation}
+\label{eq:sigmaUR}
+ \bSh_{i,j} =  \frac{\sum_{t=1}^{T_{i,j}} e_{i,t} e_{j,t}}{T_{i,j}},
+\end{equation}
+with the estimate \bSh\ being comprised of all these elements. We then
+use this to form the estimator \bOh\ by creating a block diagonal
+matrix with the \bSh\ matrices along the diagonal. With balanced data where
+$T_{i,j} = T,  \ \forall i=1,\dots,N$, we can simplify this to 
+\begin{equation}
+\label{eq:sigmaR} 
+  \bSh  =  \frac{(\mathbf{E}^\top{\bf E})}{T} 
+\end{equation}
+where $\mathbf{E}$ is the $T \times N$ matrix of residuals and hence
+estimate \bO\ by
+\begin{equation}
+  \label{eq:omega}
+  \bOh =  \bSh  \otimes \mathbf{}I_T\end{equation}
+where $\otimes$ is the Kronecker product. PCSEs are thus computed by
+taking the square root of the diagonal elements of
+\begin{equation}
+  \label{eq:pcse}
+  \text{PCSE} = (\bX^\top\bX)^{-1} \bX^\top \bOh \bX (\bX^\top\bX)^{-1}.
+\end{equation}
+
+\section{Computational issues}
+\label{sec:computation}
+
+\subsection{Balanced data}
+
+The computational issues are fairly straightforward for balanced
+data. We need only the vector of residuals from a linear fit, the
+model matrix ($\bX$), and indicators for group and time. Given the
+indicators for group and time, we can appropriately reshape the vector
+of residuals into an $N \times T$ matrix. We can then
+directly calculate $\bSh$ from Equation~\ref{eq:sigmaR} and, therefore,
+the PCSE for the fit.  Within \proglang{R}, the function \code{lm}
+returns a \code{lm} object that contains, among other items, the
+residuals and the model matrix.  It does not, however, include
+indicators for unit and time and these must be supplied by the
+user. The package \pkg{pcse} implements the estimation described above
+in the function \code{pcse}, which takes the following arguments:
+\begin{Code}
+pcse(lmobj, groupN, groupT, ...)
+\end{Code}
+The first argument \code{lmobj} is a fitted linear model object as
+returned by \code{lm}. The argument \code{groupN} is a vector
+indication which cross-sectional unit an observation is from and
+\code{groupT} indicates which time period.
+
+\subsection{Unbalanced data}
+\label{sec:unbalanced-data}
+
+
+The only interesting computational issue is how to handle unbalanced
+data sets. With an unbalanced dataset, Equation~\ref{eq:sigmaR} is no
+longer valid. There have been two alternatives estimation procedures
+suggested for unbalanced data. The first is to estimate $\bS$ using a
+balanced subset of the data. The second alternative is to calculate the
+elements of $\bS$ pairwise. We will consider each in turn.
+
+The advantage of using the balanced subset approach is its computation
+ease. The largest balanced subset of the data can be found using the
+following simple \proglang{R} code:
+\begin{Code}
+  units <- unique(groupN)
+  N     <- length(units)
+  time  <- unique(groupT)
+  T     <- length(time)
+  brows <- c()
+  for (i in 1:T) {
+    br <- which(groupT == time[i])
+    check <- length(br) == N
+    if (check) {
+      brows <- c(brows, br)
+    }
+  }
+\end{Code}
+It first computes the \code{unit} and \code{time} identifiers and their
+respective number \code{N} and \code{T}.
+The index \code{brows} gives all of the balanced rows. We can restrict
+the calculations of $\bS$ to this balanced subset of data. This allows
+us to once again use Equations~\ref{eq:sigmaR}. The downside to this
+approach is that we are not using all of the available data to
+estimate $\bS$.  
+
+Recall that $\bS$ is the contemporaneous correlation between every
+pair of units in our sample. The alternative approach then is to use
+Equation~\ref{eq:sigmaUR} for each pair $i,j \in N$ to construct our
+estimate $\bSh$. That is, for each pair of units we determine with
+temporal observations overlap between the two. We use this pairwise
+balanced sample to estimate $\bSh_{i,j}$. 
+
+We could do this directly by looping over all possible pairs and using
+Equation~\ref{eq:sigmaUR}.  However, for large N this can be a large
+set to loop over.  We can improve on this by instead filling in the
+residual vector with zeros for the missing observations needed to
+balance out the data. Clearly, these filled in observation do not alter
+the sum of the product of the residuals, since they contribute zero if
+either $i$ or $j$ have been filled in. As long as we divide by the
+appropriate $T_{i,j} = \min(T_i,T_j)$, we will appropriately calculate
+the correlation between $i$ and $j$. This is approach we use in
+\code{pcse()} when the option \code{pairwise = TRUE} is used.
+
+\section{Example}
+\label{sec:example}
+
+In this section we demonstrate the use of the package \pkg{pcse}. The
+data we will use is from \citet{alvarez+garrett+lang:1991}, hereafter
+AGL, and were reanalyzed using a simple linear model in
+\citet{beck+katz+alvarez+garrett+lang:1993}. The data set is available
+in the package as the data frame \code{agl}. The data cover basic
+macro-economic and political variables from 16 OECD nations from 1970
+to 1984. AGL estimated a model relating political and labor
+organization variables (and some economic controls) to economic
+growth, unemployment, and inflation. The argument was that economic
+performance in advanced industrialized societies was superior when
+labor was both encompassing and had political power or when labor was
+weak both in politics and the market. Here we will only look at their
+model of economic growth. 
+
+First both the package and the data need to be loaded into
+\proglang{R} with
+<<>>=
+library("pcse")
+data("agl")
+@
+We can then fit their basic model of economic growth with
+<<>>=
+agl.lm <- lm(growth ~ lagg1 + opengdp + openex + openimp + central +
+  leftc + inter + as.factor(year), data = agl)
+@
+The model assumes that growth depends on lagged growth (\code{lagg1}),
+vulnerability to OECD demand (\code{opengdp}), OECD export
+(\code{openex}), OECD import (\code{openimp}), labor organization
+index (\code{central}), year fixed effects (\code{as.factor(year)}),
+the fraction of cabinet portfolios held by ``left'' parties
+(\code{leftc}), and interaction of \code{central} and \code{leftc}
+(\code{inter}). The interest focuses on the last three variables,
+particularly the interaction.
+
+Here are the fit and standard errors without correcting for the panel
+structure of the data (note to save space the estimates for the year
+effects have been excluded from the printout.):
+<<>>=
+summary(agl.lm)
+@
+We can correct the standard errors by using: 
+<<>>=
+agl.pcse <- pcse(agl.lm, groupN = agl$country, groupT = agl$year)
+@
+Included in the package is a summary function, \code{summary.pcse},
+that can redisplay the estimates with the PCSE used for inference:
+<<>>=
+summary(agl.pcse)
+@
+We note that the standard error on \code{central} has increased a bit,
+but the standard errors of the other two variables of interest,
+\code{leftc} and \code{inter} have actually decreased.
+
+We have also included an unbalanced version of the AGL data set,
+\code{aglUn}, that was created by randomly deleting some observations.
+This was only done to demonstrate how estimates vary by casewise and
+pairwise estimation of the covariance matrix and is not a recommended
+modeling strategy. As before, we can estimate the same model by:
+<<>>=
+data("aglUn")
+aglUn.lm <- lm(growth ~ lagg1 + opengdp + openex + openimp + central +
+  leftc + inter + as.factor(year), data = aglUn)
+aglUn.pcse1 <- pcse(aglUn.lm, groupN = aglUn$country,
+  groupT = aglUn$year, pairwise = TRUE)
+summary(aglUn.pcse1)
+@
+Here we see the estimates of the pairwise version of the PCSE, since
+the option \code{pairwise = TRUE} was given. The
+results are close to the original results for the balanced data.
+
+If we preferred the casewise estimate  that uses the largest balanced
+subset to estimate the contemporaneous correlation matrix, we do that
+by:
+<<>>=
+aglUn.pcse2 <- pcse(aglUn.lm, groupN = aglUn$country, 
+  groupT = aglUn$year, pairwise = FALSE)
+@
+\begin{Soutput}
+Warning message:
+In pcse(aglUn.lm, groupN = aglUn$country, groupT = aglUn$year, ...
+  Caution! The number of CS observations per panel, 7, used to compute
+  the vcov matrix is less than half theaverage number of obs per panel
+  in the original data.You should consider using pairwise selection.
+\end{Soutput}
+<<>>=
+summary(aglUn.pcse2)
+@
+Here we see that the software has issued a warning about the
+calculation of the standard errors. Although there only 10 missing
+observations, they are intermingled through out the data. This means
+that the largest balanced panel only has seven time points, whereas
+the data runs for 14. In this case, it is not clear that PCSEs will be
+correctly estimated although in this case they are not that
+different from the casewise estimate.
+
+\section{Summary}
+\label{sec:summary}
+
+This paper briefly reviews estimation of panel-corrected standard
+errors for time-series--cross-section (TSCS) data. It discusses an
+implementation of estimating them in the \proglang{R} system for
+statistical computing in the \pkg{pcse} package.
+
+\section*{Computational details}
+
+The results in this paper were obtained using \proglang{R}~\Sexpr{paste(R.Version()[6:7], collapse = ".")}
+with the package \pkg{pcse}~\Sexpr{packageDescription("pcse")["Version"]}.
+\proglang{R} and the \pkg{pcse} package are available from CRAN at \url{http://CRAN.R-Project.org/}.
+
+\bibliography{pcse}
+
+\end{document}

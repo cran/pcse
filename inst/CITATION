@@ -1,19 +1,20 @@
 citHeader("To cite pcse in publications use:")
 
 citEntry(entry = "Article",
- title        = "Implementing Panel-Corrected Standard Errors in {R}: The {pcse} Package",
- author       = personList(as.person("Delia Bailey"),
-                  as.person("Jonathan N. Katz")),
- journal      = "Journal of Statistical Software, Code Snippets",
- year         = "2011",
- note         = "Forthcoming",
- url          = "http://www.jstatsoft.org/",
+  title        = "Implementing Panel-Corrected Standard Errors in {R}: The {pcse} Package",
+  author       = personList(as.person("Delia Bailey"),
+                   as.person("Jonathan N. Katz")),
+  journal      = "Journal of Statistical Software, Code Snippets",
+  year         = "2011",
+  volume       = "42",
+  number       = "1",
+  pages        = "1--11",
+  url          = "http://www.jstatsoft.org/v42/c01/",
 
- textVersion  =
- paste("Delia Bailey, Jonathan N. Katz (2011).",
-       "Implementing Panel-Corrected Standard Errors in R: The pcse Package.",
-       "Journal of Statistical Software, Code Snippets. Forthcoming.",
-       "URL http://www.jstatsoft.org/.")
+  textVersion  =
+  paste("Delia Bailey, Jonathan N. Katz (2011).",
+        "Implementing Panel-Corrected Standard Errors in R: The pcse Package.",
+        "Journal of Statistical Software, Code Snippets, 42(1), 1-11.",
+        "URL http://www.jstatsoft.org/v42/c01/.")
 )
-
 
