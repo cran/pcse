@@ -73,13 +73,22 @@ pcse <- function(object, groupN, groupT, pairwise=FALSE){
       groupvar <- as.character(match.call()$groupvar)
       isNamed <- TRUE
     }
-    if (isNamed){
+    if (isNamed & length(groupvar) == 1){
       groupvar <- model.frame(lm.result)[[groupvar]]
     }
     groupvar
   }
   groupT <- extractLMvar(object, groupT)
   groupN <- extractLMvar(object, groupN)
+  # check that groupT and groupN were found in the data, global namespace, or model
+  check <- !is.null(groupT)
+  if (!check){
+      stop(paste(deparse(mc$groupT), "is not found."))
+  }
+  check <- !is.null(groupN)
+  if (!check){
+      stop(paste(deparse(mc$groupN), "is not found."))
+  }
       
   
   # Check that the time-series and cross-section identifier variables
