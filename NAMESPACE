@@ -3,3 +3,9 @@
 
 # Export all names
 exportPattern(".")
+
+S3method(summary, pcse)
+S3method(vcovPC, default)
+
+importFrom("stats",
+           "model.frame", "model.matrix", "na.omit", "pt", "resid")
