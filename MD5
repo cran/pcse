@@ -1,9 +1,11 @@
 d32239bcb673463ab874e80d47fae504 *COPYING
-b4de5dcb77d773ce7724dbefd0ddb15e *DESCRIPTION
+95d5ca7ccbf462236a19861f1592ebe1 *DESCRIPTION
 74c6d9e14557a406b35152be52c7ffcb *NAMESPACE
 d17641161405c856ba6bce270e234fca *R/pcse.R
 e1dfbb407997ab48a47c2466701bfdf5 *R/summary.pcse.R
 e71021084156f441161b9ecc83938f73 *R/vcovPC.R
+15e9e7ef96b9805d1ad02b69fb1ea104 *build/partial.rdb
+dff2d0d8c77aa5f2f0dfc206bb1ce2fe *build/vignette.rds
 9a3122ddec54b53ad91924a061e4aab8 *data/agl.tab.gz
 e25e297e6dd7ff6e82e479166b8e3485 *data/aglUn.tab.gz
 d0b196b518f955310539de070e2377d4 *demo/00Index
@@ -12,10 +14,11 @@ c5e757277b2ea138f5a6e574e3381a28 *inst/CITATION
 7e39793c0f86bac695a0ec70e2bd13a9 *inst/doc/pcse.R
 390c91bcba93211590588932ed380435 *inst/doc/pcse.Rnw
 5f83887c6240db980dd00872d02ca2f0 *inst/doc/pcse.bib
-210c72fe4ae1a22367953744ac2d6ff2 *inst/doc/pcse.pdf
+5207cc5598faadbcebbab6af56d0d940 *inst/doc/pcse.pdf
 726cb1a896b34ec93eba03585e5091f0 *man/agl.Rd
 d85f05f9a13f669e90b814278fb86bff *man/aglUn.Rd
-09fa5614d244e74fbeacc94697504a41 *man/pcse-package.Rd
+b70ce24f387f0abf29945fca75f6787b *man/pcse-package.Rd
+9a47a002ff0b942eb762e5bf11942c73 *man/pcse.Rd
 4cf5c015256a0c05b8486dfdc1cd8fc3 *man/summary.pcse.Rd
 db8daf45f18e827e2f1529bfe7a8d13c *man/vcovPC.Rd
 390c91bcba93211590588932ed380435 *vignettes/pcse.Rnw
